@@ -1,0 +1,103 @@
+{
+    "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+    "version": 1,
+    "newProjectRoot": "projects",
+    "projects": {
+        "lib": {
+            "root": "lib",
+            "sourceRoot": "lib/src",
+            "projectType": "library",
+            "prefix": "lib",
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:ng-packagr",
+                    "options": {
+                        "tsConfig": "lib/tsconfig.lib.base.json",
+                        "project": "ng-package.json"
+                    },
+                    "configurations": {
+                        "production": {
+                            "tsConfig": "lib/tsconfig.lib.prod.json",
+                            "project": "ng-package.json"
+                        }
+                    }
+                },
+                "test": {
+                    "builder": "@angular-devkit/build-angular:karma",
+                    "options": {
+                        "sourceMap": true,
+                        "main": "lib/test.ts",
+                        "tsConfig": "lib/tsconfig.lib.spec.json",
+                        "karmaConfig": "lib/karma.conf.js"
+                    }
+                }
+            }
+        },
+        "demo": {
+            "root": "",
+            "sourceRoot": "demo",
+            "projectType": "application",
+            "prefix": "demo",
+            "schematics": {},
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:browser",
+                    "options": {
+                        "outputPath": "build/demo",
+                        "index": "demo/index.html",
+                        "main": "demo/main.ts",
+                        "polyfills": "demo/polyfills.ts",
+                        "tsConfig": "demo/tsconfig.json",
+                        "assets": [
+                            "demo/favicon.ico",
+                            "demo/assets"
+                        ],
+                        "styles": [
+                            "demo/styles/global.scss"
+                        ],
+                        "stylePreprocessorOptions": {
+                            "includePaths": [
+                                "demo/styles"
+                            ]
+                        },
+                        "scripts": []
+                    },
+                    "configurations": {
+                        "production": {
+                            "fileReplacements": [
+                                {
+                                    "replace": "demo/environments/environment.ts",
+                                    "with": "demo/environments/environment.prod.ts"
+                                }
+                            ],
+                            "tsConfig": "demo/tsconfig.demo.app.prod.json",
+                            "outputHashing": "all"
+                        },
+                        "development": {
+                            "tsConfig": "demo/tsconfig.demo.app.json",
+                            "buildOptimizer": false,
+                            "optimization": false,
+                            "vendorChunk": true,
+                            "extractLicenses": false,
+                            "sourceMap": true,
+                            "namedChunks": true
+                        }
+                    }
+                },
+                "serve": {
+                    "builder": "@angular-devkit/build-angular:dev-server",
+                    "configurations": {
+                        "production": {
+                            "browserTarget": "demo:build:production"
+                        },
+                        "development": {
+                            "browserTarget": "demo:build:development"
+                        }
+                    },
+                    "defaultConfiguration": "development"
+                }
+            }
+        }
+    },
+    "defaultProject": "lib"
+}

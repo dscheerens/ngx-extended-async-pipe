@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.demo.app.json",
+    "compilerOptions": {
+        "paths": {
+            "ngx-extended-async-pipe": [
+                "../build/dist"
+            ]
+        }
+    }
+}

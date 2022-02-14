@@ -1,0 +1,31 @@
+<div>data = {{ source$ | async:initialValue:errorValue | json }}</div>
+
+<p>
+    <span>Set source:</span>
+    <button (click)="setAsyncSource(null)">null</button>
+    <button (click)="setAsyncSource(undefined)">undefined</button>
+    <button (click)="setAsyncSource(observableSource$)">observable</button>
+    <button (click)="setAsyncSource(promiseSource$)">promise</button>
+</p>
+
+<p>
+    <span>Initial value:</span>
+    <button (click)="setInitialValue(null)">null</button>
+    <button (click)="setInitialValue(undefined)">undefined</button>
+    <button (click)="setInitialValue('initial')">string</button>
+    <button (click)="setInitialValue(-1)">number</button>
+    <button (click)="setInitialValue(nothing)">nothing</button>
+</p>
+
+<p>
+    <span>Error value:</span>
+    <button (click)="setErrorValue(null)">null</button>
+    <button (click)="setErrorValue(undefined)">undefined</button>
+    <button (click)="setErrorValue('error')">string</button>
+    <button (click)="setErrorValue(-1)">number</button>
+    <button (click)="setErrorValue(nothing)">nothing</button>
+</p>
+
+<p>
+    <button (click)="triggerChangeDetection()">Trigger change detection</button>
+</p>
