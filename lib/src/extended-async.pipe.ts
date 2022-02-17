@@ -7,6 +7,9 @@ import { AsyncSource } from './models/async-source.model';
 import { Nothing, nothing } from './models/nothing.model';
 import { Something } from './models/something.model';
 
+/**
+ * A drop-in replacement for the `async` pipe from `@angular/common` with additional options.
+ */
 @Pipe({ name: 'async', pure: false })
 export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> implements OnDestroy, PipeTransform {
     protected abstract readonly defaultValue: DefaultValue;
@@ -27,12 +30,62 @@ export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> i
         this.disposeSubscription();
     }
 
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value.
+     *
+     * @param source Asynchronous data source from which the values are to be obtained.
+     */
     public transform(source: null | undefined): DefaultValue;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value.
+     *
+     * @param source Asynchronous data source from which the values are to be obtained.
+     */
     public transform<T>(source: AsyncSource<T> | null | undefined): T | DefaultValue;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value or the specified initial value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet. When this is set to `nothing`
+     *                     an error will be thrown instead of returning an initial value.
+     */
     public transform<T, U>(source: AsyncSource<T>, initialValue: U): T | Something<U>;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value or the specified initial value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet. When this is set to `nothing`
+     *                     an error will be thrown instead of returning an initial value.
+     */
     public transform<T, U>(source: AsyncSource<T> | null | undefined, initialValue: U): T | Something<U> | DefaultValue;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value, the specified initial value or the specified error
+     * value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet. When this is set to `nothing`
+     *                     an error will be thrown instead of returning an initial value.
+     * @param errorValue   Value to return when the data source emits an error event. When this is set to `nothing` the error will be thrown
+     *                     instead of returning an error value.
+     */
     public transform<T, U, E>(source: AsyncSource<T>, initialValue: U, errorValue: E): T | Something<U> | Something<E>;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value, the specified initial value or the specified error
+     * value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet. When this is set to `nothing`
+     *                     an error will be thrown instead of returning an initial value.
+     * @param errorValue   Value to return when the data source emits an error event. When this is set to `nothing` the error will be thrown
+     *                     instead of returning an error value.
+     */
     public transform<T, U, E>(source: AsyncSource<T> | null | undefined, initialValue: U, errorValue: E): T | Something<U> | Something<E> | DefaultValue; // tslint:disable-line:max-line-length
+
     public transform(
         source: AsyncSource<unknown> | null | undefined,
         initialValue: unknown = this.defaultValue,
