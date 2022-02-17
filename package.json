@@ -1,6 +1,6 @@
 {
   "name": "ngx-extended-async-pipe",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Extended version of Angular's async pipe with customizable default, initial and error behavior",
   "homepage": "https://github.com/dscheerens/ngx-extended-async-pipe",
   "author": "Daan Scheerens",
