@@ -61,7 +61,7 @@ A common example is when it is used when binding (optional) input properties whe
 (data$ | async) ?? undefined
 ```
 
-In fact, this happens so frequently that it might make sense for your project to have version of the async pipe that used `undefined` as default value, rather than `null`.
+In fact, this happens so frequently that it might make sense for your project to have version of the async pipe that uses `undefined` as default value rather than `null`.
 With `ngx-extended-async-pipe` this is as simple as importing the module in the following way:
 
 ```typescript
@@ -127,7 +127,7 @@ export class MyComponent {
 }
 ```
 
-As an alternative to the `nothing` value you might be tempted to use a non-null assertion instead, e.g.:
+As an alternative to the `nothing` value you might be tempted to use a non-null assertion instead:
 
 ```
 (data$ | async)!
@@ -138,7 +138,7 @@ That can lead to bugs which might be hard to trace.
 
 ### Defining an error value
 
-Observables and promises have an separate error channel from which they can signal an error event.
+Observables and promises have a separate error channel from which they can signal an error event.
 When these events are left unhandled a runtime error is thrown.
 That also happens for such events in case of async pipe.
 To prevent these runtime errors, you can transform your asynchronous data source and define a fallback, e.g., by using the [`catchError`](https://rxjs.dev/api/operators/catchError) operator for observables and the [`catch`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch) function for promises.
