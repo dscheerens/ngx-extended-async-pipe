@@ -47,6 +47,8 @@ function defineAsyncPipeTests<T extends null | undefined>(
             expect(pipe.transform(sourceA$, 123)).toBe(123);
             expect(pipe.transform(sourceB$, 123)).toBe(123);
             expect(pipe.transform(sourceB$, 'def')).toBe('def');
+            expect(pipe.transform(sourceB$, null)).toBe(null);
+            expect(pipe.transform(sourceB$, undefined)).toBe(undefined);
         }));
 
         it('throws an error when given an invalid source', testAsyncPipe(({ pipe }) => {

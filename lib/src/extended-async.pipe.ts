@@ -88,10 +88,10 @@ export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> i
 
     public transform(
         source: AsyncSource<unknown> | null | undefined,
-        initialValue: unknown = this.defaultValue,
+        initialValue?: unknown,
         errorValue?: unknown,
     ): unknown {
-        this.updateInitialValue(initialValue);
+        this.updateInitialValue(arguments.length >= 2 ? initialValue : this.defaultValue);
         this.updateErrorValue(arguments.length >= 3 ? errorValue : nothing);
         this.updateSource(source);
 
