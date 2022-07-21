@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import { Subscribable, Unsubscribable } from 'rxjs';
 
 import { AsyncPipeError } from './async-pipe-error.model';
@@ -53,7 +54,7 @@ class PromiseAsyncSourceSubscriptionStrategy<T> implements AsyncSourceSubscripti
             },
         );
 
-        return { unsubscribe: () => this.isClosed = true };
+        return { unsubscribe: () => { this.isClosed = true; } };
     }
 }
 
@@ -67,10 +68,10 @@ class NullAsyncSourceSubscriptionStrategy<T> implements AsyncSourceSubscriptionS
     }
 }
 
-function isSubscribable<T = unknown>(value: any): value is Subscribable<T> { // tslint:disable-line:no-any
-    return !!value && typeof value.subscribe === 'function';
+function isSubscribable<T = unknown>(value: unknown): value is Subscribable<T> {
+    return !!value && typeof (value as Partial<Subscribable<T>>).subscribe === 'function';
 }
 
-function isPromise<T = unknown>(value: any): value is Promise<T> { // tslint:disable-line:no-any
-    return !!value && typeof value.then === 'function';
+function isPromise<T = unknown>(value: unknown): value is Promise<T> {
+    return !!value && typeof (value as Partial<Promise<T>>).then === 'function';
 }

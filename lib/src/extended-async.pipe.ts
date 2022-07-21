@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file, @angular-eslint/no-pipe-impure */
 import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform } from '@angular/core';
 import { Unsubscribable } from 'rxjs';
 
@@ -84,7 +85,7 @@ export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> i
      * @param errorValue   Value to return when the data source emits an error event. When this is set to `nothing` the error will be thrown
      *                     instead of returning an error value.
      */
-    public transform<T, U, E>(source: AsyncSource<T> | null | undefined, initialValue: U, errorValue: E): T | Something<U> | Something<E> | DefaultValue; // tslint:disable-line:max-line-length
+    public transform<T, U, E>(source: AsyncSource<T> | null | undefined, initialValue: U, errorValue: E): T | Something<U> | Something<E> | DefaultValue; // eslint-disable-line max-len
 
     public transform(
         source: AsyncSource<unknown> | null | undefined,
@@ -95,7 +96,9 @@ export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> i
         this.updateErrorValue(arguments.length >= 3 ? errorValue : nothing);
         this.updateSource(source);
 
-        return this.lastReturnedValue = this.resolveLatestValue();
+        this.lastReturnedValue = this.resolveLatestValue();
+
+        return this.lastReturnedValue;
     }
 
     private updateInitialValue(newInitialValue: unknown): void {

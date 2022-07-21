@@ -1,11 +1,10 @@
+/* eslint-disable max-len */
 import { ChangeDetectorRef, Type } from '@angular/core';
-import { MonoTypeOperatorFunction, NEVER, Observable, of, ReplaySubject, Subject, throwError } from 'rxjs';
+import { MonoTypeOperatorFunction, NEVER, Observable, ReplaySubject, Subject, of, throwError } from 'rxjs';
 
 import { ExtendedAsyncPipe, ExtendedAsyncPipeWithNullAsDefault, ExtendedAsyncPipeWithUndefinedAsDefault } from './extended-async.pipe';
 import { AsyncSource } from './models/async-source.model';
 import { nothing } from './models/nothing.model';
-
-// tslint:disable:max-line-length
 
 defineAsyncPipeTests(ExtendedAsyncPipeWithNullAsDefault, null);
 defineAsyncPipeTests(ExtendedAsyncPipeWithUndefinedAsDefault, undefined);
@@ -52,7 +51,8 @@ function defineAsyncPipeTests<T extends null | undefined>(
         }));
 
         it('throws an error when given an invalid source', testAsyncPipe(({ pipe }) => {
-            expect(() => pipe.transform('bad input' as any)).toThrowError(); // tslint:disable-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+            expect(() => pipe.transform('bad input' as any)).toThrowError();
         }));
 
         it('returns the initial value when switching to another source that does not emit synchronously', testAsyncPipe(({ pipe, done }) => {
@@ -365,7 +365,7 @@ function withAsyncPipeTester<T extends null | undefined>(
                 const pipe = new asyncPipeClass(changeDetectorRef);
 
                 function dispose(): void {
-                    pipe.ngOnDestroy(); // tslint:disable-line:no-life-cycle-call
+                    pipe.ngOnDestroy();
                     done();
                 }
 
@@ -381,7 +381,7 @@ function withAsyncPipeTester<T extends null | undefined>(
                         },
                     });
                 } finally {
-                    if (!doneAccessed) {
+                    if (!doneAccessed) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
                         dispose();
                     }
                 }
@@ -400,6 +400,7 @@ interface AsyncPipeTestContext<T extends null | undefined> {
     done(): void;
 }
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const uniqueTypeA = Symbol('uniqueTypeA');
 const uniqueTypeB = Symbol('uniqueTypeB');
 const uniqueTypeC = Symbol('uniqueTypeC');
@@ -409,6 +410,7 @@ type UniqueTypeC = typeof uniqueTypeC;
 const asyncSource: AsyncSource<UniqueTypeA> = of(uniqueTypeA);
 const asyncSourceOrNull = Math.random() < 0.5 ? asyncSource : null;
 const asyncSourceOrUndefined = Math.random() < 0.5 ? asyncSource : undefined;
+/* eslint-enable @typescript-eslint/naming-convention */
 
 class SubscriberCount {
     private readonly internal = {
@@ -458,7 +460,7 @@ function expectThat<T extends true>(value: T): void {
     expect(value as unknown).toBe(true);
 }
 
-function typeOf<T>(value: T): TypeOfAssertion<T> {
+function typeOf<T>(value: T): TypeOfAssertion<T> { // eslint-disable-line @typescript-eslint/no-unused-vars
     return { equals: <U>() => true as IsTypeEqual<T, U> };
 }
 
@@ -468,7 +470,7 @@ interface TypeOfAssertion<T> {
 
 type IsTypeEqual<A, B> = IsNotAny<A> extends false ? false : (
     IsNotAny<B> extends false ? false : (
-        [A] extends [B] ? ([B] extends [A] ? true : false): false
+        [A] extends [B] ? ([B] extends [A] ? true : false) : false
     )
 );
 

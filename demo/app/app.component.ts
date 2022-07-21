@@ -38,13 +38,18 @@ export class AppComponent {
     }
 
     public get promiseSource$(): Promise<number> {
-        return new Promise((resolve, reject) => setTimeout(() => {
-            if (Math.random() < 0.5) {
-                resolve(Date.now());
-            } else {
-                reject('Promise rejected!');
-            }
-        }, 5000));
+        return new Promise((resolve, reject) => {
+            setTimeout(
+                () => {
+                    if (Math.random() < 0.5) {
+                        resolve(Date.now());
+                    } else {
+                        reject('Promise rejected!');
+                    }
+                },
+                5000,
+            );
+        });
     }
 
 }

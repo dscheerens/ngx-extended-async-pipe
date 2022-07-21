@@ -29,4 +29,4 @@ export class ExtendedAsyncPipeModule {
     declarations: [ExtendedAsyncPipeWithUndefinedAsDefault],
     exports: [ExtendedAsyncPipeWithUndefinedAsDefault],
 })
-export class ɵExtendedAsyncPipeModuleWithUndefinedAsDefault {} // tslint:disable-line:class-name
+export class ɵExtendedAsyncPipeModuleWithUndefinedAsDefault {} // eslint-disable-line @typescript-eslint/naming-convention
