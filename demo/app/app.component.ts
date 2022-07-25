@@ -19,7 +19,7 @@ export class AppComponent {
     public readonly nothing: Nothing = nothing;
 
     public readonly observableSource$ = interval(1000).pipe(
-        switchMap((value) => value < 10 ? of(value) : throwError(new Error('Value is too high!'))),
+        switchMap((value) => value < 10 ? of(value) : throwError(() => new Error('Value is too high!'))),
     );
 
     public triggerChangeDetection(): void {

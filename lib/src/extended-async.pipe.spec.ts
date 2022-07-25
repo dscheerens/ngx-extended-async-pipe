@@ -2,15 +2,15 @@
 import { ChangeDetectorRef, Type } from '@angular/core';
 import { MonoTypeOperatorFunction, NEVER, Observable, ReplaySubject, Subject, of, throwError } from 'rxjs';
 
-import { ExtendedAsyncPipe, ExtendedAsyncPipeWithNullAsDefault, ExtendedAsyncPipeWithUndefinedAsDefault } from './extended-async.pipe';
+import { BaseExtendedAsyncPipe, ExtendedAsyncPipe, ExtendedAsyncPipeWithUndefinedAsDefault } from './extended-async.pipe';
 import { AsyncSource } from './models/async-source.model';
 import { nothing } from './models/nothing.model';
 
-defineAsyncPipeTests(ExtendedAsyncPipeWithNullAsDefault, null);
+defineAsyncPipeTests(ExtendedAsyncPipe, null);
 defineAsyncPipeTests(ExtendedAsyncPipeWithUndefinedAsDefault, undefined);
 
 function defineAsyncPipeTests<T extends null | undefined>(
-    asyncPipeClass: Type<ExtendedAsyncPipe<T>>,
+    asyncPipeClass: Type<BaseExtendedAsyncPipe<T>>,
     defaultValue: T,
 ): void {
     describe(`${asyncPipeClass.name}.transform function`, withAsyncPipeTester(asyncPipeClass, (testAsyncPipe) => {
@@ -225,7 +225,7 @@ function defineAsyncPipeTests<T extends null | undefined>(
     }));
 }
 
-describe(`${ExtendedAsyncPipeWithNullAsDefault.name}.transform call signature`, withAsyncPipeTester(ExtendedAsyncPipeWithNullAsDefault, (testAsyncPipe) => {
+describe(`${ExtendedAsyncPipe.name}.transform call signature`, withAsyncPipeTester(ExtendedAsyncPipe, (testAsyncPipe) => {
     it('has a return type of `null` when given `null` as input type', testAsyncPipe(({ pipe }) => {
         expectThat(typeOf(pipe.transform(null)).equals<null>());
     }));
@@ -350,7 +350,7 @@ describe(`${ExtendedAsyncPipeWithUndefinedAsDefault.name}.transform call signatu
 }));
 
 function withAsyncPipeTester<T extends null | undefined>(
-    asyncPipeClass: Type<ExtendedAsyncPipe<T>>,
+    asyncPipeClass: Type<BaseExtendedAsyncPipe<T>>,
     defineTests: (testAsyncPipe: AsyncPipeTester<T>) => void,
 ): () => void {
     return () => {
@@ -395,7 +395,7 @@ function withAsyncPipeTester<T extends null | undefined>(
 type AsyncPipeTester<T extends null | undefined> = (executeTest: (context: AsyncPipeTestContext<T>) => void) => (done: DoneFn) => void;
 
 interface AsyncPipeTestContext<T extends null | undefined> {
-    pipe: ExtendedAsyncPipe<T>;
+    pipe: BaseExtendedAsyncPipe<T>;
     markForCheckSpy: jasmine.Spy<() => void>;
     done(): void;
 }

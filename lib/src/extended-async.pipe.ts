@@ -8,11 +8,8 @@ import { AsyncSource } from './models/async-source.model';
 import { Nothing, nothing } from './models/nothing.model';
 import { Something } from './models/something.model';
 
-/**
- * A drop-in replacement for the `async` pipe from `@angular/common` with additional options.
- */
 @Pipe({ name: 'async', pure: false })
-export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> implements OnDestroy, PipeTransform {
+export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefined> implements OnDestroy, PipeTransform {
     protected abstract readonly defaultValue: DefaultValue;
 
     private latestValue: AsyncValue = INITIAL_VALUE;
@@ -197,13 +194,24 @@ export abstract class ExtendedAsyncPipe<DefaultValue extends null | undefined> i
     }
 }
 
-@Pipe({ name: 'async', pure: false })
-export class ExtendedAsyncPipeWithNullAsDefault extends ExtendedAsyncPipe<null> implements PipeTransform {
+/**
+ * A drop-in replacement for the `async` pipe from `@angular/common` with additional options.
+ *
+ * **If you also import the `CommonModule` from `@angular/common` make sure to place `ExtendedAsyncPipe` after it.**
+ */
+@Pipe({ name: 'async', pure: false, standalone: true })
+export class ExtendedAsyncPipe extends BaseExtendedAsyncPipe<null> implements PipeTransform {
     protected readonly defaultValue = null;
 }
 
-@Pipe({ name: 'async', pure: false })
-export class ExtendedAsyncPipeWithUndefinedAsDefault extends ExtendedAsyncPipe<undefined> implements PipeTransform {
+/**
+ * A drop-in replacement for the `async` pipe from `@angular/common` with additional options. Uses `undefined` rather than `null` as default
+ * value.
+ *
+ * **If you also import the `CommonModule` from `@angular/common` make sure to place `ExtendedAsyncPipeWithUndefinedAsDefault` after it.**
+ */
+@Pipe({ name: 'async', pure: false, standalone: true })
+export class ExtendedAsyncPipeWithUndefinedAsDefault extends BaseExtendedAsyncPipe<undefined> implements PipeTransform {
     protected readonly defaultValue = undefined;
 }
 

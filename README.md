@@ -15,7 +15,7 @@ The features which make `ngx-extended-async-pipe` worth your while are:
 * A special `nothing` value that can be used as initial value which is excluded from the return type. This is useful for observables that are guaranteed to synchronously emit one or more values, so no initial value is needed.
 * An option to specify the value that should be returned if the asynchronous source emits an error instead of throwing a runtime error.
 
-## Installation & usage
+## Installation
 
 First you will need to install the `ngx-extended-async-pipe` package and add it as a dependency to your project.
 
@@ -23,7 +23,18 @@ First you will need to install the `ngx-extended-async-pipe` package and add it 
 npm i ngx-extended-async-pipe
 ```
 
-Next simply import the `ExtendedAsyncPipeModule` in the modules where you wish to use it:
+### Angular version compatibility matrix
+
+Use the compatibility matrix below to determine which version of this module works with your project's Angular version.
+
+| Library version                       | Angular version |
+| ------------------------------------- | --------------- |
+| `ngx-extended-async-pipe` - **1.x.x** | >= **13.0.0**   |
+| `ngx-extended-async-pipe` - **2.x.x** | >= **14.0.0**   |
+
+## Usage
+
+After having installed the package `ngx-extended-async-pipe`, simply import the `ExtendedAsyncPipeModule` in the modules where you wish to use it:
 
 ```typescript
 import { CommonModule } from '@angular/common';
@@ -49,11 +60,30 @@ That is only necessary if you wish to make use of the other pipes and directives
 Importing the `ExtendedAsyncPipeModule` as shown above this will not change any of the existing behavior.
 The following sections explain how to make use of all extra features this library has to offer.
 
+### Usage in standalone components
+
+Since Angular 14 it is possible to define [standalone components](https://angular.io/guide/standalone-components).
+For such components rather than using `ExtendedAsyncPipeModule` opt for importing `ExtendedAsyncPipe`:
+
+```typescript
+import { Component } from '@angular/core';
+import { ExtendedAsyncPipe } from 'ngx-extended-async-pipe';
+
+@Component({
+  // ...
+  standalone: true,
+  imports: [
+    ExtendedAsyncPipe,
+  ],
+})
+export class MyComponent { }
+```
+
 ## Features
 
 ### Returning `undefined` instead of `null` by default
 
-An inconvenient thing about Angular's async pipe that it returns `null` by default.
+An inconvenience of Angular's async pipe that it returns `null` by default.
 If you have the [`strictNullChecks`](https://www.typescriptlang.org/tsconfig#strictNullChecks) and [`strictTemplates`](https://angular.io/guide/template-typecheck) compiler options enabled (both of which are highly recommended!) this often leads to conflicts.
 A common example is when it is used when binding (optional) input properties where you frequently end up with expressions such as:
 
@@ -61,7 +91,7 @@ A common example is when it is used when binding (optional) input properties whe
 (data$ | async) ?? undefined
 ```
 
-In fact, this happens so frequently that it might make sense for your project to have version of the async pipe that uses `undefined` as default value rather than `null`.
+In fact, this happens so frequently that it might make sense for your project to have a version of the async pipe that uses `undefined` as default value rather than `null`.
 With `ngx-extended-async-pipe` this is as simple as importing the module in the following way:
 
 ```typescript
@@ -74,6 +104,23 @@ import { ExtendedAsyncPipeModule } from 'ngx-extended-async-pipe';
   ],
 })
 export class MyModule { }
+```
+
+Note that the above does not work for [standalone components](https://angular.io/guide/standalone-components).
+Instead use `ExtendedAsyncPipeWithUndefinedAsDefault`:
+
+```typescript
+import { Component } from '@angular/core';
+import { ExtendedAsyncPipeWithUndefinedAsDefault } from 'ngx-extended-async-pipe';
+
+@Component({
+  // ...
+  standalone: true,
+  imports: [
+    ExtendedAsyncPipeWithUndefinedAsDefault,
+  ],
+})
+export class MyComponent { }
 ```
 
 ### Overriding the initial value
