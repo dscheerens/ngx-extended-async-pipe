@@ -46,6 +46,14 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
      * Unwraps the specified asynchronous data source and returns the last emitted value or the specified initial value.
      *
      * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet.
+     */
+    public transform<T>(source: AsyncSource<T>, initialValue: T): T;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value or the specified initial value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
      * @param initialValue Value that will be returned if the data source has not yet emitted any value yet. When this is set to `nothing`
      *                     an error will be thrown instead of returning an initial value.
      */
@@ -59,6 +67,38 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
      *                     an error will be thrown instead of returning an initial value.
      */
     public transform<T, U>(source: AsyncSource<T> | null | undefined, initialValue: U): T | Something<U> | DefaultValue;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value, the specified initial value or the specified error
+     * value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet.
+     * @param errorValue   Value to return when the data source emits an error event.
+     */
+     public transform<T>(source: AsyncSource<T>, initialValue: T, errorValue: T): T;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value, the specified initial value or the specified error
+     * value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet.
+     * @param errorValue   Value to return when the data source emits an error event. When this is set to `nothing` the error will be thrown
+     *                     instead of returning an error value.
+     */
+     public transform<T, E>(source: AsyncSource<T>, initialValue: T, errorValue: E): T | Something<E>;
+
+    /**
+     * Unwraps the specified asynchronous data source and returns the last emitted value, the specified initial value or the specified error
+     * value.
+     *
+     * @param source       Asynchronous data source from which the values are to be obtained.
+     * @param initialValue Value that will be returned if the data source has not yet emitted any value yet. When this is set to `nothing`
+     *                     an error will be thrown instead of returning an initial value.
+     * @param errorValue   Value to return when the data source emits an error event.
+     */
+     public transform<T, U>(source: AsyncSource<T>, initialValue: U, errorValue: T): T | Something<U>;
 
     /**
      * Unwraps the specified asynchronous data source and returns the last emitted value, the specified initial value or the specified error
