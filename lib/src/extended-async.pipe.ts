@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file, @angular-eslint/no-pipe-impure */
-import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform } from '@angular/core';
+import { ChangeDetectorRef, EmbeddedViewRef, OnDestroy, Pipe, PipeTransform, Type } from '@angular/core';
 import { Unsubscribable } from 'rxjs';
 
 import { AsyncPipeError } from './models/async-pipe-error.model';
@@ -8,9 +8,13 @@ import { AsyncSource } from './models/async-source.model';
 import { Nothing, nothing } from './models/nothing.model';
 import { Something } from './models/something.model';
 
+const GLOBAL_PENDING_CONTEXT_REFERENCES = new WeakSet<Type<unknown>>();
+
 @Pipe({ name: 'async', pure: false })
 export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefined> implements OnDestroy, PipeTransform {
     protected abstract readonly defaultValue: DefaultValue;
+
+    private readonly context: Type<unknown> | undefined = (this.changeDetectorRef as EmbeddedViewRef<Type<unknown>>).context;
 
     private latestValue: AsyncValue = INITIAL_VALUE;
     private lastReturnedValue: unknown;
@@ -18,7 +22,7 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
     private errorValue: unknown;
     private currentSource: AsyncSource<unknown> | undefined | Nothing = nothing;
     private subscription?: Unsubscribable;
-    private suppressMarkForCheck = false;
+    private suppressChangeDetection = false;
     private initialValueErrorThrown = false;
     private errorValueErrorThrown = false;
 
@@ -166,7 +170,7 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
 
         this.currentSource = newSource;
 
-        this.runWithMarkForCheckSuppressed(() => {
+        this.runWithChangeDetectionSuppressed(() => {
             const subscriptionStrategy = createAsyncSourceSubscriptionStrategy(newSource, this.defaultValue);
 
             this.subscription = subscriptionStrategy.subscribe(
@@ -212,17 +216,38 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
     private updateLatestValue(newValue: AsyncValue): void {
         this.latestValue = newValue;
 
-        if (!this.suppressMarkForCheck) {
-            this.changeDetectorRef.markForCheck();
+        if (this.suppressChangeDetection) {
+            return;
         }
+
+        if (this.context !== undefined) {
+            if (GLOBAL_PENDING_CONTEXT_REFERENCES.has(this.context)) {
+                return;
+            }
+
+            GLOBAL_PENDING_CONTEXT_REFERENCES.add(this.context);
+            queueMicrotask(() => {
+                this.changeDetectorRef.detach();
+                this.changeDetectorRef.detectChanges();
+                this.changeDetectorRef.reattach();
+
+                if (this.context !== undefined) {
+                    GLOBAL_PENDING_CONTEXT_REFERENCES.delete(this.context);
+                }
+            });
+
+            return;
+        }
+
+        this.changeDetectorRef.markForCheck();
     }
 
-    private runWithMarkForCheckSuppressed(runTask: () => void): void {
-        this.suppressMarkForCheck = true;
+    private runWithChangeDetectionSuppressed(runTask: () => void): void {
+        this.suppressChangeDetection = true;
         try {
             runTask();
         } finally {
-            this.suppressMarkForCheck = false;
+            this.suppressChangeDetection = false;
         }
     }
 

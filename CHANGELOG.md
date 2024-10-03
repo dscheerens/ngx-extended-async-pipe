@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/dscheerens/ngx-extended-async-pipe/compare/v2.1.0...v3.0.0) (2024-10-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* this pipe now applies local change detection
+
+### Features
+
+* change detection is now triggered locally only when possible
+
 ## [2.1.0](https://github.com/dscheerens/ngx-extended-async-pipe/compare/v2.0.0...v2.1.0) (2022-08-01)
 
 

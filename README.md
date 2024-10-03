@@ -14,6 +14,7 @@ The features which make `ngx-extended-async-pipe` worth your while are:
 * Being able to override the default initial value (`null` / `undefined`) with any value of your choosing.
 * A special `nothing` value that can be used as initial value which is excluded from the return type. This is useful for observables that are guaranteed to synchronously emit one or more values, so no initial value is needed.
 * An option to specify the value that should be returned if the asynchronous source emits an error instead of throwing a runtime error.
+* Local change detection, bringing the change detection benefit of signals also to observables.
 
 ## Installation
 
@@ -31,6 +32,7 @@ Use the compatibility matrix below to determine which version of this module wor
 | ------------------------------------- | --------------- |
 | `ngx-extended-async-pipe` - **1.x.x** | >= **13.0.0**   |
 | `ngx-extended-async-pipe` - **2.x.x** | >= **14.0.0**   |
+| `ngx-extended-async-pipe` - **3.x.x** | >= **14.0.0**   |
 
 ## Usage
 

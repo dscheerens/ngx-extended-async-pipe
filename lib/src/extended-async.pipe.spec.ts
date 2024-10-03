@@ -1,10 +1,18 @@
 /* eslint-disable max-len */
 import { ChangeDetectorRef, Type } from '@angular/core';
+import { fakeAsync, flush, flushMicrotasks } from '@angular/core/testing';
 import { MonoTypeOperatorFunction, NEVER, Observable, ReplaySubject, Subject, of, throwError } from 'rxjs';
 
 import { BaseExtendedAsyncPipe, ExtendedAsyncPipe, ExtendedAsyncPipeWithUndefinedAsDefault } from './extended-async.pipe';
 import { AsyncSource } from './models/async-source.model';
 import { nothing } from './models/nothing.model';
+
+class Component1 {} // eslint-disable-line @typescript-eslint/no-extraneous-class
+class Component2 {} // eslint-disable-line @typescript-eslint/no-extraneous-class
+/* eslint-disable @typescript-eslint/naming-convention */
+const component1 = new Component1();
+const component2 = new Component2();
+/* eslint-enable @typescript-eslint/naming-convention */
 
 defineAsyncPipeTests(ExtendedAsyncPipe, null);
 defineAsyncPipeTests(ExtendedAsyncPipeWithUndefinedAsDefault, undefined);
@@ -223,6 +231,307 @@ function defineAsyncPipeTests<T extends null | undefined>(
             }));
         });
     }));
+
+    describe(`Multiple same context ${asyncPipeClass.name}.transform function`, withMultipleAsyncPipeTester(asyncPipeClass, [component1, component1], (fakeAsyncTestMultipleAsyncPipe) => {
+        it('calls `detectChanges` on the change detector once when the source is shared for multiple pipes in the same context', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, detectChangesSpy }) => {
+                pipe.transform(source$);
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            source$.next('a');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(1);
+            });
+
+            source$.next('b');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(2);
+            });
+
+            source$.next('c');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(3);
+            });
+        }));
+
+        it('calls `detectChanges` on the change detector once when the source is shared for multiple pipes in the same context with only one pipe transforming', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            const firstPipeContext = pipeContexts[0]!;
+            const secondPipeContext = pipeContexts[1]!;
+
+            firstPipeContext.pipe.transform(source$);
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+
+            source$.next('a');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(1);
+            });
+
+            source$.next('b');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(2);
+            });
+
+            source$.next('c');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(3);
+            });
+        }));
+
+        it('calls `detectChanges` on the change detector once with multiple sources', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const sourceA$ = new Subject<string>();
+            const sourceB$ = new Subject<string>();
+
+            const firstPipeContext = pipeContexts[0]!;
+            const secondPipeContext = pipeContexts[1]!;
+
+            firstPipeContext.pipe.transform(sourceA$);
+            secondPipeContext.pipe.transform(sourceB$);
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            sourceA$.next('A1');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(1);
+            });
+
+            sourceB$.next('B1');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(2);
+            });
+
+            sourceA$.next('A2');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(3);
+            });
+        }));
+
+        it('calls `detectChanges` on the change detector once for grouped emits', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, detectChangesSpy }) => {
+                pipe.transform(source$);
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            source$.next('a');
+            source$.next('b');
+            source$.next('c');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(1);
+            });
+
+            source$.next('d');
+            source$.next('e');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(2);
+            });
+        }));
+
+        it('does not call `markForCheck` on the change detector when the source is shared for multiple pipes in the same context', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, markForCheckSpy }) => {
+                pipe.transform(source$);
+                expect(markForCheckSpy.calls.count()).toBe(0);
+            });
+
+            source$.next('a');
+            flushMicrotasks();
+            pipeContexts.forEach(({ markForCheckSpy }) => {
+                expect(markForCheckSpy.calls.count()).toBe(0);
+            });
+
+            source$.next('b');
+            flushMicrotasks();
+            pipeContexts.forEach(({ markForCheckSpy }) => {
+                expect(markForCheckSpy.calls.count()).toBe(0);
+            });
+        }));
+    }));
+
+    describe(`Multiple different context ${asyncPipeClass.name}.transform function`, withMultipleAsyncPipeTester(asyncPipeClass, [component1, component2], (fakeAsyncTestMultipleAsyncPipe) => {
+        it('calls `detectChanges` on the change detector depending on the source', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, detectChangesSpy }) => {
+                pipe.transform(source$);
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            source$.next('a');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(1);
+            });
+
+            source$.next('b');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(2);
+            });
+
+            source$.next('c');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(3);
+            });
+        }));
+
+        it('calls `detectChanges` on the change detector only on one context when the source is shared for multiple pipes in a different context with only one pipe transforming', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            const firstPipeContext = pipeContexts[0]!;
+            const secondPipeContext = pipeContexts[1]!;
+
+            firstPipeContext.pipe.transform(source$);
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+
+            source$.next('a');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(1);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+
+            source$.next('b');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(2);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+
+            source$.next('c');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(3);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+        }));
+
+        it('calls `detectChanges` on the change detector once per context with multiple sources', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const sourceA$ = new Subject<string>();
+            const sourceB$ = new Subject<string>();
+
+            const firstPipeContext = pipeContexts[0]!;
+            const secondPipeContext = pipeContexts[1]!;
+
+            firstPipeContext.pipe.transform(sourceA$);
+            secondPipeContext.pipe.transform(sourceB$);
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            sourceA$.next('A1');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(1);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+
+            sourceB$.next('B1');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(1);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(1);
+
+            sourceA$.next('A2');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(2);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(1);
+        }));
+
+        it('calls `detectChanges` on the change detector once per context for grouped emits', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, detectChangesSpy }) => {
+                pipe.transform(source$);
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            source$.next('a');
+            source$.next('b');
+            source$.next('c');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(1);
+            });
+
+            source$.next('d');
+            source$.next('e');
+            flushMicrotasks();
+            pipeContexts.forEach(({ detectChangesSpy }) => {
+                expect(detectChangesSpy.calls.count()).toBe(2);
+            });
+        }));
+    }));
+
+    describe(`With and without context ${asyncPipeClass.name}.transform function`, withMultipleAsyncPipeTester(asyncPipeClass, [component1, undefined], (fakeAsyncTestMultipleAsyncPipe) => {
+        it('calls `detectChanges` or `markForCheck` on the change detector depending on the context', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, detectChangesSpy }) => {
+                pipe.transform(source$);
+                expect(detectChangesSpy.calls.count()).toBe(0);
+            });
+
+            const firstPipeContext = pipeContexts[0]!;
+            const secondPipeContext = pipeContexts[1]!;
+
+            source$.next('a');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(1);
+            expect(firstPipeContext.markForCheckSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.markForCheckSpy.calls.count()).toBe(1);
+
+            source$.next('b');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(2);
+            expect(firstPipeContext.markForCheckSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.markForCheckSpy.calls.count()).toBe(2);
+        }));
+
+        it('calls `detectChanges` on the change detector once per context for grouped emits and multiple times for missing context', fakeAsyncTestMultipleAsyncPipe(({ pipeContexts }) => {
+            const source$ = new Subject<string>();
+
+            pipeContexts.forEach(({ pipe, detectChangesSpy, markForCheckSpy }) => {
+                pipe.transform(source$);
+                expect(detectChangesSpy.calls.count()).toBe(0);
+                expect(markForCheckSpy.calls.count()).toBe(0);
+            });
+
+            const firstPipeContext = pipeContexts[0]!;
+            const secondPipeContext = pipeContexts[1]!;
+
+            source$.next('a');
+            source$.next('b');
+            source$.next('c');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(1);
+            expect(firstPipeContext.markForCheckSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.markForCheckSpy.calls.count()).toBe(3);
+
+            source$.next('d');
+            source$.next('e');
+            flushMicrotasks();
+            expect(firstPipeContext.detectChangesSpy.calls.count()).toBe(2);
+            expect(firstPipeContext.markForCheckSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.detectChangesSpy.calls.count()).toBe(0);
+            expect(secondPipeContext.markForCheckSpy.calls.count()).toBe(5);
+        }));
+    }));
 }
 
 describe(`${ExtendedAsyncPipe.name}.transform call signature`, withAsyncPipeTester(ExtendedAsyncPipe, (testAsyncPipe) => {
@@ -392,12 +701,108 @@ function withAsyncPipeTester<T extends null | undefined>(
     };
 }
 
+function withMultipleAsyncPipeTester<T extends null | undefined>(
+    asyncPipeClass: Type<BaseExtendedAsyncPipe<T>>,
+    contexts: unknown[],
+    defineTests: (fakeAsyncTestMultipleAsyncPipe: MultipleAsyncPipeTester<T>) => void,
+): () => void {
+    return () => {
+        function testAsyncPipe(executeTest: (context: MultipleAsyncPipeTestContext<T>) => void): () => void {
+            return fakeAsync(() => {
+                const uniqueContexts = Array.from(new Set(contexts));
+
+                const changeDetectorRefByContext = new Map(
+                    uniqueContexts.map((uniqueContext) => [uniqueContext, {
+                        detach(): void {},
+                        reattach(): void {},
+                        markForCheck(): void {},
+                        detectChanges(): void {},
+                        context: uniqueContext,
+                    } as unknown as ChangeDetectorRef] as const),
+                );
+
+                const markForCheckSpyByChangeDetectorRef = new Map(
+                    [...changeDetectorRefByContext.values()].map((changeDetectorRef) => [changeDetectorRef, spyOn(changeDetectorRef, 'markForCheck').and.callThrough()] as const),
+                );
+                const detectChangesSpyByChangeDetectorRef = new Map(
+                    [...changeDetectorRefByContext.values()].map((changeDetectorRef) => [changeDetectorRef, spyOn(changeDetectorRef, 'detectChanges').and.callThrough()] as const),
+                );
+
+                const pipeContexts = contexts.map((context) => {
+                    const changeDetectorRef = changeDetectorRefByContext.get(context);
+                    if (!changeDetectorRef) {
+                        return undefined;
+                    }
+
+                    const markForCheckSpy = markForCheckSpyByChangeDetectorRef.get(changeDetectorRef);
+                    const detectChangesSpy = detectChangesSpyByChangeDetectorRef.get(changeDetectorRef);
+                    if (!markForCheckSpy || !detectChangesSpy) {
+                        return undefined;
+                    }
+
+                    const pipe = new asyncPipeClass(changeDetectorRef);
+
+                    return {
+                        pipe,
+                        context,
+                        markForCheckSpy,
+                        detectChangesSpy,
+                        dispose: () => {
+                            pipe.ngOnDestroy();
+                        },
+                    };
+                }).filter((pipeContext): pipeContext is PipeContext<T> => pipeContext !== undefined);
+
+                function dispose(): void {
+                    pipeContexts.forEach((pipeContext) => {
+                        pipeContext.dispose();
+                    });
+
+                    flush();
+                }
+
+                let doneAccessed = false;
+                try {
+                    executeTest({
+                        pipeContexts,
+                        get done(): () => void {
+                            doneAccessed = true;
+
+                            return dispose;
+                        },
+                    });
+                } finally {
+                    if (!doneAccessed) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+                        dispose();
+                    }
+                }
+            });
+        }
+
+        return defineTests(testAsyncPipe);
+    };
+}
+
 type AsyncPipeTester<T extends null | undefined> = (executeTest: (context: AsyncPipeTestContext<T>) => void) => (done: DoneFn) => void;
+type MultipleAsyncPipeTester<T extends null | undefined> = (executeTest: (context: MultipleAsyncPipeTestContext<T>) => void) => (done: DoneFn) => void;
 
 interface AsyncPipeTestContext<T extends null | undefined> {
     pipe: BaseExtendedAsyncPipe<T>;
     markForCheckSpy: jasmine.Spy<() => void>;
     done(): void;
+}
+
+interface MultipleAsyncPipeTestContext<T extends null | undefined> {
+    pipeContexts: PipeContext<T>[];
+    done(): void;
+}
+
+interface PipeContext<T extends null | undefined> {
+    pipe: BaseExtendedAsyncPipe<T>;
+    context: unknown;
+    markForCheckSpy: jasmine.Spy<() => void>;
+    detectChangesSpy: jasmine.Spy<() => void>;
+    dispose(): void;
 }
 
 /* eslint-disable @typescript-eslint/naming-convention */
