@@ -14,7 +14,7 @@ The features which make `ngx-extended-async-pipe` worth your while are:
 * Being able to override the default initial value (`null` / `undefined`) with any value of your choosing.
 * A special `nothing` value that can be used as initial value which is excluded from the return type. This is useful for observables that are guaranteed to synchronously emit one or more values, so no initial value is needed.
 * An option to specify the value that should be returned if the asynchronous source emits an error instead of throwing a runtime error.
-* Local change detection, bringing the change detection benefit of signals also to observables.
+* Opt-in for local change detection, bringing the change detection benefit of signals also to observables.
 
 ## Installation
 
@@ -32,7 +32,6 @@ Use the compatibility matrix below to determine which version of this module wor
 | ------------------------------------- | --------------- |
 | `ngx-extended-async-pipe` - **1.x.x** | >= **13.0.0**   |
 | `ngx-extended-async-pipe` - **2.x.x** | >= **14.0.0**   |
-| `ngx-extended-async-pipe` - **3.x.x** | >= **14.0.0**   |
 
 ## Usage
 
@@ -202,3 +201,58 @@ data$ | async:initialValue:errorValue
 ```
 
 No runtime error will be thrown when an error value is specified (unless you use the special value `nothing`).
+
+### Opt-in for local change detection
+
+With the introduction of signals in Angular 16 and further improvements for signals in Angular 17, local change detection became the standard for signals if the `OnPush` change detection strategy was applied. However, this was only applied for signals and not for observables using the async pipe in the template.
+To also make this available for the async pipe, the `ngx-extended-async-pipe` now supports an opt-in for local change detection, which can be applied globally or locally and can also be disabled for specific components and their descendants.
+
+Enabling the local change detection and having the extended async pipe applied to an observable in the template, will only mark the current component to be checked for changes if the observable emits a new value. It will no longer also mark all the ancestors as dirty.
+
+To enable the local change detection locally in a component, add `enableExtendedAsyncPipeLocalChangeDetection()`:
+```typescript
+import { Component } from '@angular/core';
+import { ExtendedAsyncPipe, enableExtendedAsyncPipeLocalChangeDetection } from 'ngx-extended-async-pipe';
+
+@Component({
+  // ...
+  standalone: true,
+  imports: [
+    ExtendedAsyncPipe,
+  ],
+  providers: [
+    enableExtendedAsyncPipeLocalChangeDetection(),
+  ],
+})
+export class MyComponent { }
+```
+To also enable it for all the descendants of this component, provide the additional configuration:
+```typescript
+@Component({
+  // ...
+  providers: [
+    enableExtendedAsyncPipeLocalChangeDetection({ enableForChildren: true }),
+  ],
+})
+```
+
+To enable the local change detection globally in the application, add this provider at the root level of the application, either in the `main.ts` or the application's `AppModule`.
+
+Disabling the local change detection at a deeper level in the application is possible by providing `disableExtendedAsyncPipeLocalChangeDetection`:
+```typescript
+import { Component } from '@angular/core';
+import { ExtendedAsyncPipe, disableExtendedAsyncPipeLocalChangeDetection } from 'ngx-extended-async-pipe';
+
+@Component({
+  // ...
+  standalone: true,
+  imports: [
+    ExtendedAsyncPipe,
+  ],
+  providers: [
+    disableExtendedAsyncPipeLocalChangeDetection(),
+  ],
+})
+export class MyComponent { }
+```
+This configuration will disable the local change detection for this component and all of its descendants. Providing the `enableExtendedAsyncPipeLocalChangeDetection` again in one of the descendants will enable it again for that descendant.

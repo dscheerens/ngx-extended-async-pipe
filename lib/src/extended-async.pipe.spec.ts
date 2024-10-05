@@ -5,6 +5,7 @@ import { MonoTypeOperatorFunction, NEVER, Observable, ReplaySubject, Subject, of
 
 import { BaseExtendedAsyncPipe, ExtendedAsyncPipe, ExtendedAsyncPipeWithUndefinedAsDefault } from './extended-async.pipe';
 import { AsyncSource } from './models/async-source.model';
+import { LocalChangeDetectionControlFlag } from './models/local-change-detection-control-flag.enum';
 import { nothing } from './models/nothing.model';
 
 class Component1 {} // eslint-disable-line @typescript-eslint/no-extraneous-class
@@ -740,11 +741,10 @@ function withMultipleAsyncPipeTester<T extends null | undefined>(
                         return undefined;
                     }
 
-                    const pipe = new asyncPipeClass(changeDetectorRef);
+                    const pipe = new asyncPipeClass(changeDetectorRef, context !== undefined ? LocalChangeDetectionControlFlag.Self : undefined, undefined);
 
                     return {
                         pipe,
-                        context,
                         markForCheckSpy,
                         detectChangesSpy,
                         dispose: () => {
@@ -799,7 +799,6 @@ interface MultipleAsyncPipeTestContext<T extends null | undefined> {
 
 interface PipeContext<T extends null | undefined> {
     pipe: BaseExtendedAsyncPipe<T>;
-    context: unknown;
     markForCheckSpy: jasmine.Spy<() => void>;
     detectChangesSpy: jasmine.Spy<() => void>;
     dispose(): void;
