@@ -1,16 +1,27 @@
 /* eslint-disable max-classes-per-file, @angular-eslint/no-pipe-impure */
-import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform } from '@angular/core';
+import { ChangeDetectorRef, EmbeddedViewRef, Inject, OnDestroy, Optional, Pipe, PipeTransform, Self, SkipSelf, Type } from '@angular/core';
 import { Unsubscribable } from 'rxjs';
+import { LOCAL_CHANGE_DETECTION_EXTENDED_ASYNC_PIPE_CONTROL_FLAG } from './configurations/local-change-detection-control-flag.token';
 
 import { AsyncPipeError } from './models/async-pipe-error.model';
 import { createAsyncSourceSubscriptionStrategy } from './models/async-source-strategy.model';
 import { AsyncSource } from './models/async-source.model';
+import { LocalChangeDetectionControlFlag } from './models/local-change-detection-control-flag.enum';
 import { Nothing, nothing } from './models/nothing.model';
 import { Something } from './models/something.model';
+import { isLocalChangeDetectionEnabled } from './utilities/is-local-change-detection-enabled';
+
+const GLOBAL_PENDING_CONTEXT_REFERENCES = new WeakSet<Type<unknown>>();
 
 @Pipe({ name: 'async', pure: false })
 export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefined> implements OnDestroy, PipeTransform {
     protected abstract readonly defaultValue: DefaultValue;
+
+    private readonly context: Type<unknown> | undefined = (this.changeDetectorRef as EmbeddedViewRef<Type<unknown>>).context;
+    private readonly isLocalChangeDetectionEnabled = isLocalChangeDetectionEnabled(
+        this.selfLocalChangeDetectionFlag,
+        this.parentLocalChangeDetectionFlag,
+    );
 
     private latestValue: AsyncValue = INITIAL_VALUE;
     private lastReturnedValue: unknown;
@@ -18,11 +29,17 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
     private errorValue: unknown;
     private currentSource: AsyncSource<unknown> | undefined | Nothing = nothing;
     private subscription?: Unsubscribable;
-    private suppressMarkForCheck = false;
+    private suppressChangeDetection = false;
     private initialValueErrorThrown = false;
     private errorValueErrorThrown = false;
 
-    constructor(private readonly changeDetectorRef: ChangeDetectorRef) {}
+    constructor(
+        private readonly changeDetectorRef: ChangeDetectorRef,
+        @Inject(LOCAL_CHANGE_DETECTION_EXTENDED_ASYNC_PIPE_CONTROL_FLAG) @Optional() @Self()
+            private readonly selfLocalChangeDetectionFlag: LocalChangeDetectionControlFlag | undefined,
+        @Inject(LOCAL_CHANGE_DETECTION_EXTENDED_ASYNC_PIPE_CONTROL_FLAG) @Optional() @SkipSelf()
+            private readonly parentLocalChangeDetectionFlag: LocalChangeDetectionControlFlag | undefined,
+    ) {}
 
     public ngOnDestroy(): void {
         this.disposeSubscription();
@@ -166,7 +183,7 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
 
         this.currentSource = newSource;
 
-        this.runWithMarkForCheckSuppressed(() => {
+        this.runWithChangeDetectionSuppressed(() => {
             const subscriptionStrategy = createAsyncSourceSubscriptionStrategy(newSource, this.defaultValue);
 
             this.subscription = subscriptionStrategy.subscribe(
@@ -212,17 +229,38 @@ export abstract class BaseExtendedAsyncPipe<DefaultValue extends null | undefine
     private updateLatestValue(newValue: AsyncValue): void {
         this.latestValue = newValue;
 
-        if (!this.suppressMarkForCheck) {
-            this.changeDetectorRef.markForCheck();
+        if (this.suppressChangeDetection) {
+            return;
         }
+
+        if (this.isLocalChangeDetectionEnabled && this.context !== undefined) {
+            if (GLOBAL_PENDING_CONTEXT_REFERENCES.has(this.context)) {
+                return;
+            }
+
+            GLOBAL_PENDING_CONTEXT_REFERENCES.add(this.context);
+            queueMicrotask(() => {
+                this.changeDetectorRef.detach();
+                this.changeDetectorRef.detectChanges();
+                this.changeDetectorRef.reattach();
+
+                if (this.context !== undefined) {
+                    GLOBAL_PENDING_CONTEXT_REFERENCES.delete(this.context);
+                }
+            });
+
+            return;
+        }
+
+        this.changeDetectorRef.markForCheck();
     }
 
-    private runWithMarkForCheckSuppressed(runTask: () => void): void {
-        this.suppressMarkForCheck = true;
+    private runWithChangeDetectionSuppressed(runTask: () => void): void {
+        this.suppressChangeDetection = true;
         try {
             runTask();
         } finally {
-            this.suppressMarkForCheck = false;
+            this.suppressChangeDetection = false;
         }
     }
 
